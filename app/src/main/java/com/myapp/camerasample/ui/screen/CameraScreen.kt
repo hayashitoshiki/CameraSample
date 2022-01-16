@@ -6,6 +6,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.MediaActionSound
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
@@ -56,7 +57,6 @@ fun CameraEvent(
     onClickNegativeAction: () -> Unit
 ) {
     var isPermission by remember { mutableStateOf(false) }
-
     Scaffold(backgroundColor = Color.Transparent) {
         if (!isPermission) {
             CameraPermissionHandler {
@@ -278,6 +278,10 @@ private fun ImageCapture.takePicture(
     val photoFile = File(outputDirectory, filename)
     val outputFileOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
+    // シャッター音
+    val sound = MediaActionSound()
+    sound.load(MediaActionSound.SHUTTER_CLICK)
+
     // 画像ファイル保存
     this.takePicture(
         outputFileOptions,
@@ -286,8 +290,10 @@ private fun ImageCapture.takePicture(
             // 成功
             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                 val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
+                sound.play(MediaActionSound.SHUTTER_CLICK)
                 Log.d("画像保存成功", "saveUri = " + savedUri)
                 onImageCaptured(savedUri)
+
             }
             // 失敗
             override fun onError(exception: ImageCaptureException) {
