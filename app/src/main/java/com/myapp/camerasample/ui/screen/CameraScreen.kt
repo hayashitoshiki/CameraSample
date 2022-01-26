@@ -1,18 +1,13 @@
 package com.myapp.camerasample.ui.screen
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.media.MediaActionSound
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -36,8 +31,8 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.myapp.camerasample.ui.component.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -83,29 +78,19 @@ fun CameraEvent(
  */
 @Composable
 private fun CameraPermissionHandler(onGranted: (Boolean) -> Unit) {
-    val context = LocalContext.current
-    val permission = Manifest.permission.CAMERA
-    val cameraRationale = ActivityCompat.shouldShowRequestPermissionRationale(context as Activity, permission)
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        onGranted(it)
+    val permission = Permissions.CAMERA
+    val customPermissionDialog = @Composable{
+        CustomCameraDialog(
+            onClickPositiveAction = { onGranted(false) },
+            onClickNegativeAction = { onGranted(false) }
+        )
     }
-
-    if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
-        onGranted(true)
-    } else {
-        if(!cameraRationale) {
-            SideEffect {
-                launcher.launch(permission)
-            }
-        } else {
-            CustomCameraDialog(
-                onClickPositiveAction = { onGranted(false) },
-                onClickNegativeAction = { onGranted(false) }
-            )
-        }
-    }
+    PermissionHandler(
+        onGranted = onGranted,
+        permission = permission,
+        CustomPermissionDialog = customPermissionDialog
+    )
 }
-
 
 /**
  * カメラ撮影画面
