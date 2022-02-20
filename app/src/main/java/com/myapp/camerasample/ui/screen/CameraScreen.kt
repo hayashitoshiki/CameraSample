@@ -77,7 +77,7 @@ fun CameraEvent(
  * @param onGranted 判定結果
  */
 @Composable
-private fun CameraPermissionHandler(onGranted: (Boolean) -> Unit) {
+fun CameraPermissionHandler(onGranted: (Boolean) -> Unit) {
     val permission = Permissions.CAMERA
     val customPermissionDialog = @Composable{
         CustomCameraDialog(

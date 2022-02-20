@@ -1,0 +1,6 @@
+<paths>
+    <!-- external-files-path: getExternalFilesDir() 用の宣言 -->
+    <!-- <external-files-path name="external-files" path="." /> -->
+    <!-- files-path: filesDir 用の宣言 -->
+    <files-path name="files" path="." />
+</paths>
