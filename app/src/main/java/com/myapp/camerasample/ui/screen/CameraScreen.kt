@@ -39,6 +39,12 @@ import java.util.*
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
+
 
 /**
  * カメライベント処理
@@ -276,6 +282,33 @@ private fun ImageCapture.takePicture(
             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                 val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
                 sound.play(MediaActionSound.SHUTTER_CLICK)
+
+                //　リサイズサンプル
+                val prefix = "file://"
+                val folder = context.filesDir.toString()
+                val filePath = "$prefix$folder/"
+                val file = if (Regex(filePath).containsMatchIn(savedUri.toString())) {
+                    savedUri.toString().removePrefix(filePath)
+                } else {
+                    savedUri.toString()
+                }
+                val oldFileSize = (photoFile.length() / 1024).toString().toInt()
+                Log.d("TAG", "fileSize = " + oldFileSize + "KB")
+                try {
+                    BufferedInputStream(context.openFileInput(file)).use { bufferedInputStream ->
+                        val bitmap1 = BitmapFactory.decodeStream(bufferedInputStream)
+                        val newBitmap = getResizedBitmap(bitmap1,480,640)
+                       val outputStream = ByteArrayOutputStream()
+                        newBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                        val byteArray = outputStream.toByteArray()
+                        File(savedUri.path!!).writeBytes(byteArray)
+                        onImageCaptured(savedUri)
+                    }
+                } catch (exception: Exception) {
+                    exception.printStackTrace()
+                }
+                val newFileSize = (photoFile.length() / 1024).toString().toInt()
+                Log.d("TAG", "fileSize = " + newFileSize + "KB")
                 Log.d("画像保存成功", "saveUri = " + savedUri)
                 onImageCaptured(savedUri)
 
@@ -331,4 +364,23 @@ private fun openApplicationDetailsSettings(context: Context) {
         it.data = Uri.fromParts("package", context.packageName, null)
     }
     context.startActivity(intent)
+}
+
+
+/**
+ * 写真リサイズ
+ *
+ * @param bitmap リサイズする画像
+ * @param newWidth リサイズする幅
+ * @param newHeight リサイズする高さ
+ * @return リサイズした画像
+ */
+fun getResizedBitmap(bitmap: Bitmap, newWidth: Int, newHeight: Int): Bitmap {
+    val width = bitmap.width
+    val height = bitmap.height
+    val scaleWidth = newWidth.toFloat() / width
+    val scaleHeight = newHeight.toFloat() / height
+    val matrix = Matrix()
+    matrix.postScale(scaleWidth, scaleHeight)
+    return Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, false)
 }
